@@ -596,16 +596,38 @@
     }
 
     // ── Chat Panel ────────────────────────────────────────────────────────────
-    const STARTERS = [
-      "Give me a portfolio overview",
-      "Why is Cardiology Insights underperforming?",
-      "Show me only HCP campaigns",
-      "Explain how engagement score is calculated",
-      "Compare DTC vs HCP performance",
-      "Which channel has the best ROAS?",
-    ];
+    const TAB_STARTERS = {
+      overview: [
+        "Give me a portfolio overview",
+        "How are we tracking against the 2x ROAS benchmark?",
+        "What's driving the week-over-week change in impressions?",
+        "Which condition category is delivering the best ROI?",
+        "Are there any campaigns I should be worried about right now?",
+      ],
+      campaigns: [
+        "Why is Cardiology Insights underperforming?",
+        "Compare DTC vs HCP performance",
+        "Which campaign has the highest engagement score?",
+        "What's pulling Asthma Management's ROAS below 1x?",
+        "Show me only HCP campaigns",
+      ],
+      channels: [
+        "Which channel has the best ROAS?",
+        "How does endemic compare to programmatic performance?",
+        "Where should we shift budget based on channel efficiency?",
+        "Which channel drives the most conversions per dollar?",
+        "What's the CPM difference between social and endemic?",
+      ],
+      quality: [
+        "Which campaigns have viewability below the 70% benchmark?",
+        "Are any campaigns at risk of ad fraud?",
+        "Explain how quality score is calculated",
+        "Which campaigns are showing frequency fatigue risk?",
+        "What's our brand safety score across HCP placements?",
+      ],
+    };
 
-    function ChatPanel({ open, onClose, filters, onFiltersChange }) {
+    function ChatPanel({ open, onClose, filters, onFiltersChange, activeTab }) {
       const [messages, setMessages] = useState([]);
       const [input, setInput] = useState('');
       const [sending, setSending] = useState(false);
@@ -691,10 +713,12 @@
               <div className="chat-messages flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
                 {messages.length === 0 && (
                   <div className="flex flex-col gap-3 mt-2">
-                    <p className="text-xs text-slate-500 text-center">Ask anything about your campaigns</p>
+                    <p className="text-xs text-center" style={{color:'#475569'}}>
+                      Suggested for <span style={{color: C.teal, fontWeight:600}}>{activeTab}</span>
+                    </p>
                     <div className="flex flex-col gap-2">
-                      {STARTERS.map((s, i) => (
-                        <button key={i}
+                      {(TAB_STARTERS[activeTab] || TAB_STARTERS.overview).map((s) => (
+                        <button key={s}
                           className="suggestion-chip text-left text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-400"
                           style={{background:'#111827'}}
                           onClick={() => send(s)}>
@@ -994,6 +1018,7 @@
               onClose={() => setChatOpen(false)}
               filters={filters}
               onFiltersChange={(newFilters) => setFilters(f => ({...f, ...newFilters}))}
+              activeTab={activeTab}
             />
           </div>
 
