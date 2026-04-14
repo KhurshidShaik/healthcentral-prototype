@@ -250,8 +250,8 @@
                   <YAxis yAxisId="left" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
                   <YAxis yAxisId="right" orientation="right" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
                   <Tooltip content={<CustomTooltip />} />
-                  <Area yAxisId="left" type="monotone" dataKey="Impressions" stroke={C.teal} strokeWidth={2} fill="url(#gImp)" name="Impressions (K)" />
-                  <Area yAxisId="right" type="monotone" dataKey="CTR" stroke={C.blue} strokeWidth={2} fill="url(#gCTR)" name="CTR %" />
+                  <Area isAnimationActive={false} yAxisId="left" type="monotone" dataKey="Impressions" stroke={C.teal} strokeWidth={2} fill="url(#gImp)" name="Impressions (K)" />
+                  <Area isAnimationActive={false} yAxisId="right" type="monotone" dataKey="CTR" stroke={C.blue} strokeWidth={2} fill="url(#gCTR)" name="CTR %" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -260,7 +260,7 @@
               <SectionHeader title="Channel Mix" sub="Spend distribution" source="Sigma" />
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie data={channel_mix || []} dataKey="spend_usd" nameKey="channel" cx="50%" cy="50%"
+                  <Pie isAnimationActive={false} data={channel_mix || []} dataKey="spend_usd" nameKey="channel" cx="50%" cy="50%"
                     innerRadius={55} outerRadius={85} paddingAngle={3}>
                     {(channel_mix || []).map((_, i) => (
                       <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -289,7 +289,7 @@
                   <XAxis dataKey="week" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
                   <YAxis tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
                   <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="ROAS" stroke={C.green} strokeWidth={2} fill="url(#gROAS)" name="ROAS (x)" />
+                  <Area isAnimationActive={false} type="monotone" dataKey="ROAS" stroke={C.green} strokeWidth={2} fill="url(#gROAS)" name="ROAS (x)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -308,7 +308,7 @@
                   <XAxis dataKey="week" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
                   <YAxis tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false} domain={[0,100]}/>
                   <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="Engagement" stroke={C.rose} strokeWidth={2} fill="url(#gEng)" name="Engagement Score" />
+                  <Area isAnimationActive={false} type="monotone" dataKey="Engagement" stroke={C.rose} strokeWidth={2} fill="url(#gEng)" name="Engagement Score" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -383,6 +383,7 @@
                 }} />
                 <Legend wrapperStyle={{fontSize:'11px',color:'#94a3b8',paddingTop:'8px'}} />
                 <Scatter
+                  isAnimationActive={false}
                   name="DTC"
                   data={(campaigns || []).filter(c => c.campaign_type === 'DTC' && c.engagement_score != null && c.roas != null)}
                   fill={C.teal}
@@ -391,6 +392,7 @@
                   strokeWidth={1}
                 />
                 <Scatter
+                  isAnimationActive={false}
                   name="HCP"
                   data={(campaigns || []).filter(c => c.campaign_type === 'HCP' && c.engagement_score != null && c.roas != null)}
                   fill={C.blue}
@@ -460,7 +462,7 @@
                   <XAxis type="number" tick={{fill:'#475569',fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`$${(v/1000).toFixed(0)}K`}/>
                   <YAxis type="category" dataKey="channel" tick={{fill:'#94a3b8',fontSize:10}} axisLine={false} tickLine={false} width={130}/>
                   <Tooltip formatter={(v)=>[`$${(v/1000).toFixed(1)}K`,'Spend']} contentStyle={{background:'#253348',border:'1px solid #4b6280',borderRadius:'8px',color:'#f1f5f9',fontSize:'12px'}}/>
-                  <Bar dataKey="spend_usd" radius={[0,4,4,0]}>
+                  <Bar isAnimationActive={false} dataKey="spend_usd" radius={[0,4,4,0]}>
                     {sorted.map((ch, i) => <Cell key={ch.channel} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   </Bar>
                 </BarChart>
@@ -475,7 +477,7 @@
                   <XAxis type="number" tick={{fill:'#475569',fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`${v.toFixed(1)}x`}/>
                   <YAxis type="category" dataKey="channel" tick={{fill:'#94a3b8',fontSize:10}} axisLine={false} tickLine={false} width={130}/>
                   <Tooltip formatter={(v)=>[`${v.toFixed(2)}x`,'ROAS']} contentStyle={{background:'#253348',border:'1px solid #4b6280',borderRadius:'8px',color:'#f1f5f9',fontSize:'12px'}}/>
-                  <Bar dataKey="roas" radius={[0,4,4,0]}>
+                  <Bar isAnimationActive={false} dataKey="roas" radius={[0,4,4,0]}>
                     {[...sorted].sort((a,b)=>b.roas-a.roas).map((d,i)=>(
                       <Cell key={i} fill={d.roas>=2.5 ? C.green : d.roas>=1.5 ? C.amber : C.rose} />
                     ))}
