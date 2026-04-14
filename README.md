@@ -1,8 +1,10 @@
 # HealthCentral — Campaign Performance Intelligence Hub
 
-A multi-source BI prototype demonstrating how campaign data from **Sigma Computing**, **Adobe Analytics**, and **DCM ad servers** can be unified into a single reporting layer with AI-assisted insight generation.
+A multi-source BI prototype demonstrating how campaign data from **Sigma Computing**, **Adobe Analytics**, and **DCM ad servers** can be unified into a single reporting layer with a **conversational AI agent** for insight generation, dashboard control, and deep explainability.
 
 Built by **Khurshid Shaik** as a proof-of-concept for the BI Analyst role at HealthCentral Corporation.
+
+---
 
 ## Architecture
 
@@ -26,10 +28,20 @@ Built by **Khurshid Shaik** as a proof-of-concept for the BI Analyst role at Hea
         └─────────────┬───────────────┘
                       ▼
         ┌─────────────────────────────┐
-        │  Dashboard + AI Insight     │
-        │       Layer                 │
-        └─────────────────────────────┘
+        │  FastAPI Backend            │
+        │  /api/data  /api/chat       │
+        │  /api/filters               │
+        └─────────────┬───────────────┘
+                      ▼
+        ┌─────────────────────────────┐    ┌──────────────────────────┐
+        │  React Dashboard (dark UI)  │◄───│  OpenAI GPT-4o Agent     │
+        │  Overview · Campaigns       │    │  Function-calling tools   │
+        │  Channels · Quality         │    │  filter · analyze ·      │
+        │  + AI Chat Panel            │    │  explain · compare        │
+        └─────────────────────────────┘    └──────────────────────────┘
 ```
+
+---
 
 ## Data Sources (Simulated)
 
@@ -39,56 +51,106 @@ Built by **Khurshid Shaik** as a proof-of-concept for the BI Analyst role at Hea
 | Adobe Analytics | `data/adobe_engagement.csv` | Time on site, pages/session, bounce rate, scroll depth, return rate | 144 |
 | DCM Ad Server | `data/dcm_delivery.csv` | Viewability, video completion, frequency, reach, fraud rate, brand safety | 144 |
 
+12 campaigns (7 DTC, 5 HCP) × 12 weeks (Jan–Mar 2026)
+
+---
+
 ## Derived Metrics (ETL)
 
-- **ROAS** — Return on ad spend (conversions × $35 avg value / spend)
-- **Engagement Score** — Composite 0-100 from time on site, scroll depth, bounce rate, return visits
-- **Quality Score** — Composite 0-100 from viewability, brand safety, fraud rate
-- **Cost per Conversion** — Spend / conversions
+| Metric | Formula | Source |
+|--------|---------|--------|
+| **ROAS** | Conversions × $35 avg value / Spend | Sigma |
+| **Engagement Score** (0–100) | Time on site (25%) + Scroll depth (25%) + Inverse bounce (25%) + Return visits (25%) | Adobe |
+| **Quality Score** (0–100) | Viewability (40%) + Brand safety (40%) + Inverse fraud rate (20%) | DCM |
+| **Cost per Conversion** | Spend / Conversions | Sigma |
+
+---
+
+## AI Agent Capabilities
+
+The conversational agent (GPT-4o with function calling) understands natural language and can:
+
+| What you say | What happens |
+|---|---|
+| *"Show me only HCP campaigns"* | Filters dashboard to HCP, charts re-render |
+| *"Why is Cardiology Insights underperforming?"* | Pulls data from all 3 sources, diagnoses root cause |
+| *"Explain how engagement score is calculated"* | Returns formula, benchmarks, what to watch for |
+| *"Compare DTC vs HCP performance"* | Side-by-side metric comparison across all sources |
+| *"Which channel has the best ROAS?"* | Runs channel analysis, surfaces the winner |
+| *"Give me a portfolio overview"* | Summary KPIs, top/bottom performers, active alerts |
+
+---
 
 ## Quick Start
 
 ```bash
-# Install dependencies
+# 1. Clone
+git clone https://github.com/KhurshidShaik/healthcentral-prototype.git
+cd healthcentral-prototype
+
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# Generate source data
+# 3. Add your OpenAI API key
+echo "OPENAI_API_KEY=sk-your-key-here" > .env
+
+# 4. Generate source data (if CSVs not present)
 python generate_sigma.py
 python generate_adobe.py
 python generate_dcm.py
 
-# Run ETL pipeline
-python etl_pipeline.py
-
-# Launch dashboard
-streamlit run app.py
+# 5. Launch
+python main.py
 ```
 
-## Deploy to Streamlit Cloud (Free)
+Open **http://localhost:8000** — dashboard loads with AI chat panel.
 
-1. Push this repo to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repo
-4. Set main file as `app.py`
-5. Deploy — you'll get a shareable link
+---
+
+## Project Structure
+
+```
+healthcentral-prototype/
+├── main.py              # FastAPI server — serves UI + API endpoints
+├── agent.py             # OpenAI GPT-4o function-calling agent
+├── tools.py             # Agent tool implementations (data analysis functions)
+├── prompts.py           # System prompt with full schema, benchmarks, metric definitions
+├── etl_pipeline.py      # Extract → Validate → Transform → Join → Load
+├── generate_sigma.py    # Simulated Sigma Computing data generator
+├── generate_adobe.py    # Simulated Adobe Analytics data generator
+├── generate_dcm.py      # Simulated DCM ad server data generator
+├── index.html           # React dashboard (single file, CDN-loaded, no build step)
+├── requirements.txt
+└── data/
+    ├── sigma_campaign_metrics.csv
+    ├── adobe_engagement.csv
+    ├── dcm_delivery.csv
+    └── unified_campaign_performance.csv
+```
+
+---
 
 ## JD Alignment
 
 | JD Requirement | How This Prototype Demonstrates It |
-|---------------|-----------------------------------|
-| "Own campaign performance data products" | The entire dashboard is a campaign data product |
-| "Translate multi-source data into insights" | 3 sources unified via ETL pipeline |
-| "Evolve from descriptive to prescriptive" | AI insight button: summary → diagnostic → prescriptive |
-| "Integrate Sigma, Adobe Analytics, ad servers" | Exact tools simulated with realistic data |
-| "Define and standardize metrics" | Engagement score, quality score, ROAS — documented |
-| "AI-assisted reporting workflows" | AI generates diagnostic + prescriptive recommendations |
-| "HCP and DTC campaigns" | Both types with filtering and comparison |
-| "Scalable, reliable data products" | Modular ETL pipeline + Streamlit = deployable |
+|---|---|
+| "Own campaign performance data products" | FastAPI + React dashboard is a fully deployable campaign data product |
+| "Translate multi-source data into insights" | 3 sources unified via ETL pipeline into one dataset |
+| "Evolve from descriptive to prescriptive" | AI agent moves from summary → diagnostic → prescriptive recommendation |
+| "Integrate Sigma, Adobe Analytics, ad servers" | All three tools simulated with realistic, schema-accurate data |
+| "Define and standardize metrics" | Engagement Score, Quality Score, ROAS — documented with formulas |
+| "AI-assisted reporting workflows" | Conversational agent answers questions, filters dashboard, explains every metric |
+| "HCP and DTC campaigns" | 12 campaigns across both types with condition-level filtering |
+| "Scalable, reliable data products" | Modular ETL + FastAPI + stateless React = production-deployable pattern |
 
-## Tech Stack (All Free)
+---
 
-- **Python 3.10+** — ETL pipeline
-- **pandas** — Data processing
-- **Streamlit** — Dashboard UI
-- **Plotly** — Interactive charts
-- **Streamlit Cloud** — Free hosting
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.10+, FastAPI, Uvicorn |
+| AI Agent | OpenAI GPT-4o (function calling) |
+| Data processing | pandas, numpy |
+| Frontend | React 18 (CDN), Recharts, Tailwind CSS |
+| Data sources | Simulated CSV exports (Sigma, Adobe, DCM schemas) |
