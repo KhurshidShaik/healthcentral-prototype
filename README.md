@@ -26,8 +26,8 @@ Built by **Khurshid Shaik** as a proof-of-concept for the BI Analyst role at Hea
         └─────────────┬───────────────┘
                       ▼
         ┌─────────────────────────────┐
-        │  Streamlit Dashboard        │
-        │  + AI Insight Layer         │
+        │  Dashboard + AI Insight     │
+        │       Layer                 │
         └─────────────────────────────┘
 ```
 
