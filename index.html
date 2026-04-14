@@ -633,6 +633,7 @@
       const [messages, setMessages] = useState([]);
       const [input, setInput] = useState('');
       const [sending, setSending] = useState(false);
+      const [showSuggestions, setShowSuggestions] = useState(true);
       const bottomRef = useRef(null);
       const inputRef = useRef(null);
       useEffect(() => {
@@ -712,23 +713,6 @@
               </div>
 
               {/* Messages */}
-              {/* Suggested questions — always visible, updates on tab switch */}
-              <div className="flex-shrink-0 border-b border-slate-800 px-4 py-3">
-                <p className="text-xs mb-2" style={{color:'#475569'}}>
-                  Suggested for <span style={{color: C.teal, fontWeight:600}}>{activeTab}</span>
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {(TAB_STARTERS[activeTab] || TAB_STARTERS.overview).map((s) => (
-                    <button key={s}
-                      className="suggestion-chip text-left text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-400"
-                      style={{background:'#111827'}}
-                      onClick={() => send(s)}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div className="chat-messages flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
                 {messages.map((m) => {
                   // ── Regular message ──
@@ -793,6 +777,29 @@
                 )}
 
                 <div ref={bottomRef} />
+              </div>
+
+              {/* Suggested questions toggle */}
+              <div className="flex-shrink-0 border-t border-slate-800">
+                <button
+                  onClick={() => setShowSuggestions(v => !v)}
+                  className="w-full flex items-center justify-between px-4 py-2 text-xs"
+                  style={{color: showSuggestions ? C.teal : '#475569'}}>
+                  <span>💡 Suggested for <span style={{fontWeight:600}}>{activeTab}</span></span>
+                  <span>{showSuggestions ? '▲' : '▼'}</span>
+                </button>
+                {showSuggestions && (
+                  <div className="flex flex-col gap-1.5 px-4 pb-3">
+                    {(TAB_STARTERS[activeTab] || TAB_STARTERS.overview).map((s) => (
+                      <button key={s}
+                        className="suggestion-chip text-left text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-400"
+                        style={{background:'#111827'}}
+                        onClick={() => send(s)}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Input */}
