@@ -633,6 +633,20 @@
       const [sending, setSending] = useState(false);
       const bottomRef = useRef(null);
       const inputRef = useRef(null);
+      const prevTabRef = useRef(activeTab);
+
+      // When the tab changes and there are existing messages, inject a
+      // tab-switch divider so the user sees relevant questions without
+      // losing their conversation history.
+      useEffect(() => {
+        if (prevTabRef.current !== activeTab) {
+          prevTabRef.current = activeTab;
+          setMessages(prev => {
+            if (prev.length === 0) return prev; // empty state already shows starters
+            return [...prev, { role: 'tab-switch', tab: activeTab }];
+          });
+        }
+      }, [activeTab]);
 
       useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -647,8 +661,10 @@
         const userMsg = { role: 'user', content: msg };
         setMessages(prev => [...prev, userMsg]);
 
-        // Build history for API (exclude last user msg we just added)
-        const history = messages.map(m => ({ role: m.role, content: m.content }));
+        // Build history for API — exclude tab-switch dividers
+        const history = messages
+          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .map(m => ({ role: m.role, content: m.content }));
 
         try {
           const res = await fetch('/api/chat', {
@@ -729,7 +745,35 @@
                   </div>
                 )}
 
-                {messages.map((m, i) => (
+                {messages.map((m, i) => {
+                  // ── Tab-switch divider ──
+                  if (m.role === 'tab-switch') {
+                    return (
+                      <div key={i} className="fade-in flex flex-col gap-2 my-1">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-px" style={{background:'#1e293b'}} />
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                            style={{background:'rgba(45,212,191,0.1)', color: C.teal, border:'1px solid rgba(45,212,191,0.25)'}}>
+                            Switched to {m.tab}
+                          </span>
+                          <div className="flex-1 h-px" style={{background:'#1e293b'}} />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          {(TAB_STARTERS[m.tab] || TAB_STARTERS.overview).map((s) => (
+                            <button key={s}
+                              className="suggestion-chip text-left text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-400"
+                              style={{background:'#111827'}}
+                              onClick={() => send(s)}>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // ── Regular message ──
+                  return (
                   <div key={i} className={`fade-in flex flex-col gap-1 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
                     <div className={`text-xs font-semibold ${m.role === 'user' ? 'text-teal-400' : 'text-slate-400'}`}>
                       {m.role === 'user' ? 'You' : '🤖 AI Analyst'}
@@ -777,7 +821,8 @@
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
 
                 {sending && (
                   <div className="fade-in flex flex-col gap-1 items-start">
