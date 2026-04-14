@@ -10,6 +10,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from agent import run_agent
@@ -33,6 +34,28 @@ BASE_DIR = Path(__file__).parent
 @app.get("/")
 def serve_ui():
     return FileResponse(BASE_DIR / "index.html", media_type="text/html")
+
+
+# ─── Source CSV downloads ─────────────────────────────────────────────────────
+
+SOURCE_FILES = {
+    "sigma": ("sigma_campaign_metrics.csv", "Sigma_Campaign_Metrics.csv"),
+    "adobe": ("adobe_engagement.csv", "Adobe_Engagement.csv"),
+    "dcm":   ("dcm_delivery.csv", "DCM_Delivery.csv"),
+}
+
+@app.get("/api/source/{source}")
+def download_source(source: str):
+    if source not in SOURCE_FILES:
+        raise HTTPException(status_code=404, detail="Unknown source")
+    filename, download_name = SOURCE_FILES[source]
+    path = BASE_DIR / "data" / filename
+    return FileResponse(
+        path,
+        media_type="text/csv",
+        filename=download_name,
+        headers={"Content-Disposition": f"attachment; filename={download_name}"},
+    )
 
 
 # ─── Filters ──────────────────────────────────────────────────────────────────
@@ -86,6 +109,54 @@ def get_data(
     avg_engagement = float(filtered["engagement_score"].mean())
     avg_quality = float(filtered["quality_score"].mean())
     avg_viewability = float(filtered["viewability_pct"].mean())
+
+    # ── Week-over-week deltas (last week vs prior week) ──
+    weeks_sorted = sorted(filtered["week_start"].unique())
+    wow = {}
+    if len(weeks_sorted) >= 2:
+        cur_w  = filtered[filtered["week_start"] == weeks_sorted[-1]]
+        prev_w = filtered[filtered["week_start"] == weeks_sorted[-2]]
+        def _pct(cur, prv):
+            if prv == 0: return None
+            return round((cur - prv) / abs(prv) * 100, 1)
+        cur_imp  = int(cur_w["impressions"].sum())
+        prev_imp = int(prev_w["impressions"].sum())
+        cur_conv = int(cur_w["conversions"].sum())
+        prev_conv= int(prev_w["conversions"].sum())
+        cur_ctr  = float(cur_w["clicks"].sum() / cur_w["impressions"].sum() * 100) if cur_w["impressions"].sum() > 0 else 0
+        prev_ctr = float(prev_w["clicks"].sum() / prev_w["impressions"].sum() * 100) if prev_w["impressions"].sum() > 0 else 0
+        cur_roas = float(cur_w["roas"].mean())
+        prev_roas= float(prev_w["roas"].mean())
+        cur_eng  = float(cur_w["engagement_score"].mean())
+        prev_eng = float(prev_w["engagement_score"].mean())
+        wow = {
+            "impressions": _pct(cur_imp, prev_imp),
+            "ctr":         _pct(cur_ctr, prev_ctr),
+            "conversions": _pct(cur_conv, prev_conv),
+            "roas":        _pct(cur_roas, prev_roas),
+            "engagement":  _pct(cur_eng, prev_eng),
+        }
+
+    # ── Health alerts ──
+    alerts = []
+    camp_agg_alert = (
+        filtered.groupby(["campaign_id", "campaign_name"])
+        .agg(viewability=("viewability_pct","mean"), fraud=("fraud_rate_pct","mean"),
+             frequency=("avg_frequency","mean"), roas=("roas","mean"), bounce=("bounce_rate_pct","mean"))
+        .reset_index()
+    )
+    low_view = camp_agg_alert[camp_agg_alert["viewability"] < 70]
+    if not low_view.empty:
+        alerts.append({"type":"warning","msg":f"{len(low_view)} campaign{'s' if len(low_view)>1 else ''} below 70% viewability benchmark","tab":"quality"})
+    high_fraud = camp_agg_alert[camp_agg_alert["fraud"] > 3]
+    if not high_fraud.empty:
+        alerts.append({"type":"error","msg":f"{len(high_fraud)} campaign{'s' if len(high_fraud)>1 else ''} with fraud rate >3%","tab":"quality"})
+    high_freq = camp_agg_alert[camp_agg_alert["frequency"] > 5]
+    if not high_freq.empty:
+        alerts.append({"type":"warning","msg":f"{len(high_freq)} campaign{'s' if len(high_freq)>1 else ''} with frequency >5x — fatigue risk","tab":"campaigns"})
+    low_roas = camp_agg_alert[camp_agg_alert["roas"] < 1.0]
+    if not low_roas.empty:
+        alerts.append({"type":"error","msg":f"{len(low_roas)} campaign{'s' if len(low_roas)>1 else ''} with ROAS <1x — spending more than generating","tab":"campaigns"})
 
     # ── Weekly trend ──
     weekly = (
@@ -159,6 +230,8 @@ def get_data(
         "weekly_trend": weekly.to_dict(orient="records"),
         "campaigns": camp_agg.to_dict(orient="records"),
         "channel_mix": channel_data.to_dict(orient="records"),
+        "wow": wow,
+        "alerts": alerts,
     })
 
 
