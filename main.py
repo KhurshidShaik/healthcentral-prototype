@@ -33,7 +33,11 @@ BASE_DIR = Path(__file__).parent
 
 @app.get("/")
 def serve_ui():
-    return FileResponse(BASE_DIR / "index.html", media_type="text/html")
+    return FileResponse(
+        BASE_DIR / "index.html",
+        media_type="text/html",
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 
 # ─── Source CSV downloads ─────────────────────────────────────────────────────
