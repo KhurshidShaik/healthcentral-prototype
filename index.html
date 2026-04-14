@@ -130,6 +130,14 @@
 
     // ── Reusable Components ───────────────────────────────────────────────────
 
+    function WoWBadge({ positive, value }) {
+      return (
+        <span className={`text-xs font-semibold ${positive ? 'text-green-400' : 'text-rose-400'}`}>
+          {value >= 0 ? '▲' : '▼'} {Math.abs(value)}% WoW
+        </span>
+      );
+    }
+
     function KPICard({ icon, label, value, sub, color, wow }) {
       return (
         <div className="kpi-card rounded-xl p-4 flex flex-col gap-1.5 border border-slate-800" style={{background: C.card}}>
@@ -187,14 +195,10 @@
       }));
 
       const wowBadge = (key, higherGood = true) => {
-        const v = wow[key];
+        const v = (wow || {})[key];
         if (v == null) return null;
         const pos = higherGood ? v >= 0 : v <= 0;
-        return (
-          <span className={`text-xs font-semibold ${pos ? 'text-green-400' : 'text-rose-400'}`}>
-            {v >= 0 ? '▲' : '▼'} {Math.abs(v)}% WoW
-          </span>
-        );
+        return <WoWBadge positive={pos} value={v} />;
       };
 
       return (
@@ -824,39 +828,47 @@
     // ── Source Badges ─────────────────────────────────────────────────────────
     function SourceBadge({ label, color, bg, csvKey, docsUrl, docsLabel }) {
       const [open, setOpen] = useState(false);
-      const ref = useRef(null);
-
-      useEffect(() => {
-        function handleClick(e) {
-          if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-        }
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-      }, []);
 
       return (
-        <div ref={ref} className="relative">
+        <div className="relative">
+          {/* Invisible backdrop — closes dropdown without touching document listeners */}
+          {open && (
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setOpen(false)}
+            />
+          )}
+
           <button
             onClick={() => setOpen(o => !o)}
             className="text-xs px-2.5 py-1 rounded-full font-semibold cursor-pointer transition-all"
             style={{
               color, background: bg,
               border: open ? `1px solid ${color}` : '1px solid transparent',
+              position: 'relative', zIndex: 50,
             }}>
             {label} ↓
           </button>
 
           {open && (
-            <div className="absolute right-0 mt-1.5 z-50 rounded-xl border border-slate-700 shadow-2xl overflow-hidden"
-              style={{background:'#1a2235', minWidth:'180px'}}>
+            <div
+              className="absolute right-0 mt-1.5 rounded-xl border border-slate-700 shadow-2xl overflow-hidden"
+              style={{ background: '#1a2235', minWidth: '180px', zIndex: 50 }}>
               <div className="px-3 py-2 border-b border-slate-700">
-                <p className="text-xs font-semibold" style={{color}}>{label} Data Source</p>
+                <p className="text-xs font-semibold" style={{ color }}>{label} Data Source</p>
               </div>
-              <a href={`/api/source/${csvKey}`} download
+              <a
+                href={`/api/source/${csvKey}`}
+                download
+                onClick={() => setOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 transition-colors">
                 <span>⬇</span> Download source CSV
               </a>
-              <a href={docsUrl} target="_blank" rel="noreferrer"
+              <a
+                href={docsUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 transition-colors border-t border-slate-800">
                 <span>↗</span> Visit {docsLabel}
               </a>
