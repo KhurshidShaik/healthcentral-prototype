@@ -426,8 +426,8 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {sorted.map((row, i) => (
-                    <tr key={i} className="table-row border-b border-slate-800/50" style={{background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'}}>
+                  {sorted.map((row) => (
+                    <tr key={row.campaign_id} className="table-row border-b border-slate-800/50">
                       {cols.map(c => (
                         <td key={c.key} className="px-3 py-2.5 text-slate-300" style={{textAlign: c.align}}>
                           {c.fmt(row[c.key])}
@@ -461,7 +461,7 @@
                   <YAxis type="category" dataKey="channel" tick={{fill:'#94a3b8',fontSize:10}} axisLine={false} tickLine={false} width={130}/>
                   <Tooltip formatter={(v)=>[`$${(v/1000).toFixed(1)}K`,'Spend']} contentStyle={{background:'#253348',border:'1px solid #4b6280',borderRadius:'8px',color:'#f1f5f9',fontSize:'12px'}}/>
                   <Bar dataKey="spend_usd" radius={[0,4,4,0]}>
-                    {sorted.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    {sorted.map((ch, i) => <Cell key={ch.channel} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -499,8 +499,8 @@
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((ch, i) => (
-                  <tr key={i} className="table-row border-b border-slate-800/50">
+                {sorted.map((ch) => (
+                  <tr key={ch.channel} className="table-row border-b border-slate-800/50">
                     <td className="px-4 py-2.5 text-slate-200 font-medium">{ch.channel}</td>
                     <td className="px-4 py-2.5 text-slate-400">{ch.campaigns ?? '—'}</td>
                     <td className="px-4 py-2.5 text-slate-400">{fmt.num(ch.impressions)}</td>
@@ -542,11 +542,11 @@
           <div className="rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
             <SectionHeader title="Quality Score by Campaign" sub="DCM: Viewability (40%) + Brand Safety (40%) + Fraud rate (20%)" source="DCM" />
             <div className="flex flex-col gap-3 mt-2">
-              {sorted.map((c, i) => (
-                <div key={i} className="flex items-center gap-3">
+              {sorted.map((c) => (
+                <div key={c.campaign_id} className="flex items-center gap-3">
                   <div className="w-44 text-xs text-slate-400 truncate text-right flex-shrink-0">{c.campaign_name?.replace(' — HCP','').replace(' — DTC','')}</div>
                   <div className="flex-1 bg-slate-800 rounded-full h-2">
-                    <div className="h-2 rounded-full transition-all duration-500"
+                    <div className="h-2 rounded-full"
                       style={{
                         width:`${c.quality_score}%`,
                         background: c.quality_score>=80 ? C.green : c.quality_score>=65 ? C.amber : C.rose
@@ -575,8 +575,8 @@
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((c, i) => (
-                  <tr key={i} className="table-row border-b border-slate-800/50">
+                {sorted.map((c) => (
+                  <tr key={c.campaign_id} className="table-row border-b border-slate-800/50">
                     <td className="px-4 py-2.5 text-slate-300 font-medium max-w-xs truncate">{c.campaign_name}</td>
                     <td className="px-4 py-2.5">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${c.campaign_type==='DTC'?'bg-teal-900/60 text-teal-300':'bg-blue-900/60 text-blue-300'}`}>{c.campaign_type}</span>
