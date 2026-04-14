@@ -206,8 +206,8 @@
           {/* Alert bar */}
           {alerts.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {alerts.map((a, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border"
+              {alerts.map((a) => (
+                <div key={a.msg} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border"
                   style={{
                     background: a.type === 'error' ? 'rgba(251,113,133,0.08)' : 'rgba(251,191,36,0.08)',
                     borderColor: a.type === 'error' ? 'rgba(251,113,133,0.3)' : 'rgba(251,191,36,0.3)',
@@ -643,7 +643,7 @@
           prevTabRef.current = activeTab;
           setMessages(prev => {
             if (prev.length === 0) return prev; // empty state already shows starters
-            return [...prev, { role: 'tab-switch', tab: activeTab }];
+            return [...prev, { role: 'tab-switch', tab: activeTab, id: Date.now() }];
           });
         }
       }, [activeTab]);
@@ -658,7 +658,7 @@
         setInput('');
         setSending(true);
 
-        const userMsg = { role: 'user', content: msg };
+        const userMsg = { role: 'user', content: msg, id: Date.now() };
         setMessages(prev => [...prev, userMsg]);
 
         // Build history for API — exclude tab-switch dividers
@@ -678,6 +678,7 @@
             role: 'assistant',
             content: data.message,
             suggestions: data.suggestions || [],
+            id: Date.now() + 1,
           }]);
 
           // Apply any dashboard actions
@@ -693,6 +694,7 @@
             role: 'assistant',
             content: 'Sorry, something went wrong. Please try again.',
             error: true,
+            id: Date.now() + 2,
           }]);
         } finally {
           setSending(false);
@@ -749,7 +751,7 @@
                   // ── Tab-switch divider ──
                   if (m.role === 'tab-switch') {
                     return (
-                      <div key={i} className="fade-in flex flex-col gap-2 my-1">
+                      <div key={m.id} className="fade-in flex flex-col gap-2 my-1">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-px" style={{background:'#1e293b'}} />
                           <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
@@ -774,7 +776,7 @@
 
                   // ── Regular message ──
                   return (
-                  <div key={i} className={`fade-in flex flex-col gap-1 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div key={m.id} className={`fade-in flex flex-col gap-1 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
                     <div className={`text-xs font-semibold ${m.role === 'user' ? 'text-teal-400' : 'text-slate-400'}`}>
                       {m.role === 'user' ? 'You' : '🤖 AI Analyst'}
                     </div>
