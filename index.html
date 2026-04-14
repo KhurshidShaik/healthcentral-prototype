@@ -636,6 +636,13 @@
       const [showSuggestions, setShowSuggestions] = useState(true);
       const bottomRef = useRef(null);
       const inputRef = useRef(null);
+
+      // When tab switches, remove follow-up suggestion chips from all
+      // messages so previous-tab questions don't bleed into the new tab.
+      useEffect(() => {
+        setMessages(prev => prev.map(m => ({ ...m, suggestions: [] })));
+      }, [activeTab]);
+
       useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, [messages, sending]);
