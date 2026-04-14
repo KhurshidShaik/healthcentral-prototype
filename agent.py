@@ -4,6 +4,7 @@ One clean loop: message → tool calls → tool results → final response + act
 """
 import json
 import os
+import re
 import pandas as pd
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -235,16 +236,18 @@ def run_agent(user_message: str, current_filters: dict, history: list,
             tools=TOOL_DEFINITIONS,
             tool_choice="auto",
             temperature=0.2,
-            max_tokens=300,
+            max_tokens=450,
         )
 
         msg = response.choices[0].message
 
         # No tool call → final response
         if not msg.tool_calls:
+            content, suggestions = _parse_suggestions(msg.content or "")
             return {
-                "message": msg.content,
+                "message": content,
                 "actions": accumulated_actions,
+                "suggestions": suggestions,
             }
 
         # Append assistant message with tool calls
@@ -273,4 +276,23 @@ def run_agent(user_message: str, current_filters: dict, history: list,
     return {
         "message": "I've processed your request. The dashboard has been updated.",
         "actions": accumulated_actions,
+        "suggestions": [],
     }
+
+
+# ─── Suggestion Parser ─────────────────────────────────────────────────────────
+
+def _parse_suggestions(content: str) -> tuple[str, list]:
+    """
+    Extract SUGGEST:[...] from the end of the model response.
+    Returns (clean_message, suggestions_list).
+    """
+    match = re.search(r'SUGGEST:\s*(\[.*?\])\s*$', content, re.DOTALL)
+    if not match:
+        return content.strip(), []
+    try:
+        suggestions = json.loads(match.group(1))
+        clean = content[:match.start()].strip()
+        return clean, suggestions[:3]
+    except (json.JSONDecodeError, ValueError):
+        return content.strip(), []

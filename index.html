@@ -609,7 +609,11 @@
           });
           const data = await res.json();
 
-          setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: data.message,
+            suggestions: data.suggestions || [],
+          }]);
 
           // Apply any dashboard actions
           if (data.actions?.length) {
@@ -689,6 +693,38 @@
                       }}>
                       {m.content}
                     </div>
+
+                    {/* Suggestion chips — only on assistant messages with suggestions */}
+                    {m.role === 'assistant' && m.suggestions?.length > 0 && (
+                      <div className="flex flex-col gap-1.5 mt-1 w-full max-w-[90%]">
+                        <p className="text-xs" style={{color:'#475569'}}>You might ask:</p>
+                        {m.suggestions.map((s, si) => (
+                          <button
+                            key={si}
+                            disabled={sending}
+                            onClick={() => send(s)}
+                            className="text-left text-xs px-3 py-1.5 rounded-lg border transition-all duration-150 disabled:opacity-40"
+                            style={{
+                              background: 'transparent',
+                              borderColor: '#2d4a5e',
+                              color: '#7db8d4',
+                              fontStyle: 'normal',
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background = 'rgba(45,212,191,0.08)';
+                              e.currentTarget.style.borderColor = '#2dd4bf';
+                              e.currentTarget.style.color = '#2dd4bf';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.borderColor = '#2d4a5e';
+                              e.currentTarget.style.color = '#7db8d4';
+                            }}>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
 
