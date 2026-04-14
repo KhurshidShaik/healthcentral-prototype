@@ -182,7 +182,7 @@
 
     // ── Tab: Overview ─────────────────────────────────────────────────────────
     function OverviewTab({ data }) {
-      if (!data) return <div className="text-slate-500 text-sm mt-10 text-center">Loading…</div>;
+      if (!data || !data.kpis) return <div className="text-slate-500 text-sm mt-10 text-center">No data for this filter combination.</div>;
       const { kpis, weekly_trend, channel_mix, wow = {}, alerts = [] } = data;
 
       const trendData = (weekly_trend || []).map(w => ({
@@ -319,7 +319,7 @@
 
     // ── Tab: Campaigns ────────────────────────────────────────────────────────
     function CampaignsTab({ data }) {
-      if (!data) return null;
+      if (!data || !data.campaigns) return <div className="text-slate-500 text-sm mt-10 text-center">No data for this filter combination.</div>;
       const { campaigns } = data;
       const [sort, setSort] = useState({ key: 'roas', dir: -1 });
 
@@ -447,7 +447,7 @@
 
     // ── Tab: Channels ─────────────────────────────────────────────────────────
     function ChannelsTab({ data }) {
-      if (!data) return null;
+      if (!data || !data.channel_mix) return <div className="text-slate-500 text-sm mt-10 text-center">No data for this filter combination.</div>;
       const { channel_mix } = data;
       const sorted = [...(channel_mix || [])].sort((a, b) => b.spend_usd - a.spend_usd);
 
@@ -524,7 +524,7 @@
 
     // ── Tab: Quality ──────────────────────────────────────────────────────────
     function QualityTab({ data }) {
-      if (!data) return null;
+      if (!data || !data.kpis) return <div className="text-slate-500 text-sm mt-10 text-center">No data for this filter combination.</div>;
       const { campaigns, kpis } = data;
 
       const sorted = [...(campaigns || [])].sort((a,b) => b.quality_score - a.quality_score);
@@ -987,9 +987,9 @@
           channel: filters.channel,
         });
         fetch(`/api/data?${params}`)
-          .then(r => r.json())
+          .then(r => r.ok ? r.json() : null)
           .then(d => { setData(d); setLoading(false); })
-          .catch(() => setLoading(false));
+          .catch(() => { setData(null); setLoading(false); });
       }, [filters]);
 
       const tabs = [
