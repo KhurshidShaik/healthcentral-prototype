@@ -634,6 +634,13 @@
       const bottomRef = useRef(null);
       const inputRef = useRef(null);
 
+      // Clear conversation when the active tab changes so the new tab's
+      // suggested questions are shown immediately.
+      useEffect(() => {
+        setMessages([]);
+        setInput('');
+      }, [activeTab]);
+
       useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, [messages, sending]);
