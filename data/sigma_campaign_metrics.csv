@@ -1,0 +1,145 @@
+campaign_id,campaign_name,campaign_type,condition_category,channel,week_start,impressions,clicks,ctr_pct,conversions,cvr_pct,spend_usd,cpm_usd,cpc_usd,source
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-01-12,297051,5495,1.85,121,2.22,6110.34,20.57,1.11,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-01-19,320135,5890,1.84,137,2.34,6988.55,21.83,1.19,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-01-26,353493,7105,2.01,162,2.29,7027.44,19.88,0.99,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-02-02,313959,6090,1.94,124,2.04,6878.84,21.91,1.13,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-02-09,282865,5685,2.01,124,2.19,6203.23,21.93,1.09,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-02-16,374716,7606,2.03,168,2.22,7456.85,19.9,0.98,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-02-23,378335,7339,1.94,148,2.02,7699.12,20.35,1.05,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-03-02,356982,7175,2.01,171,2.39,7221.75,20.23,1.01,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-03-09,320664,6605,2.06,145,2.21,6509.48,20.3,0.99,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-03-16,322632,6710,2.08,148,2.22,6678.48,20.7,1.0,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-03-23,444467,8533,1.92,193,2.27,9316.03,20.96,1.09,Sigma
+HC-DTC-001,Diabetes Awareness — DTC,DTC,Diabetes,Programmatic Display,2026-03-30,475493,9747,2.05,220,2.26,10032.9,21.1,1.03,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-01-12,326941,4969,1.52,162,3.27,3795.79,11.61,0.76,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-01-19,414414,6050,1.46,196,3.24,5097.29,12.3,0.84,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-01-26,367634,4852,1.32,161,3.33,4455.72,12.12,0.92,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-02-02,345176,4728,1.37,141,2.99,4228.41,12.25,0.89,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-02-09,467047,6538,1.4,187,2.87,5711.98,12.23,0.87,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-02-16,444303,6531,1.47,202,3.1,5331.64,12.0,0.82,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-02-23,365438,4823,1.32,135,2.81,4436.42,12.14,0.92,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-03-02,426845,6402,1.5,188,2.95,5066.65,11.87,0.79,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-03-09,434256,5688,1.31,168,2.97,5024.34,11.57,0.88,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-03-16,549038,7906,1.44,263,3.33,6775.13,12.34,0.86,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-03-23,484250,6876,1.42,226,3.29,6028.91,12.45,0.88,Sigma
+HC-HCP-002,Oncology CME — HCP,HCP,Cancer,Endemic Display,2026-03-30,402064,5427,1.35,166,3.06,4965.49,12.35,0.91,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-01-12,248583,3430,1.38,71,2.08,4201.05,16.9,1.22,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-01-19,243072,3427,1.41,68,2.0,4144.38,17.05,1.21,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-01-26,257519,3811,1.48,77,2.04,4725.47,18.35,1.24,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-02-02,283127,3992,1.41,79,1.99,4872.62,17.21,1.22,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-02-09,276526,3981,1.44,86,2.17,4858.56,17.57,1.22,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-02-16,234004,3299,1.41,68,2.08,4214.41,18.01,1.28,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-02-23,308026,4343,1.41,101,2.33,5544.47,18.0,1.28,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-03-02,259542,3841,1.48,90,2.35,4456.34,17.17,1.16,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-03-09,283104,4274,1.51,91,2.13,4747.65,16.77,1.11,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-03-16,306142,4408,1.44,103,2.34,5443.2,17.78,1.23,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-03-23,283266,4079,1.44,93,2.28,4815.52,17.0,1.18,Sigma
+HC-DTC-003,Mental Health Stories — DTC,DTC,Mental Health,Social + Native,2026-03-30,314133,4523,1.44,94,2.09,5761.2,18.34,1.27,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-01-12,279643,6040,2.16,258,4.28,5478.21,19.59,0.91,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-01-19,315571,6153,1.95,227,3.69,6191.5,19.62,1.01,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-01-26,263850,5145,1.95,210,4.09,4730.83,17.93,0.92,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-02-02,310391,6673,2.15,272,4.08,5692.57,18.34,0.85,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-02-09,303655,6164,2.03,256,4.16,5814.99,19.15,0.94,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-02-16,361153,7620,2.11,277,3.64,6721.06,18.61,0.88,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-02-23,299529,6709,2.24,260,3.88,5870.77,19.6,0.88,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-03-02,383366,8012,2.09,322,4.02,7226.45,18.85,0.9,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-03-09,352074,7076,2.01,253,3.58,6738.7,19.14,0.95,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-03-16,377295,8451,2.24,362,4.29,7025.23,18.62,0.83,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-03-23,365113,7521,2.06,325,4.33,7207.33,19.74,0.96,Sigma
+HC-HCP-004,Autoimmune Treatment — HCP,HCP,Autoimmune,Email + Endemic,2026-03-30,382426,7839,2.05,332,4.24,7082.53,18.52,0.9,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-01-12,181669,3161,1.74,140,4.44,3457.16,19.03,1.09,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-01-19,235912,4199,1.78,176,4.21,4751.27,20.14,1.13,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-01-26,201903,3634,1.8,156,4.3,4132.95,20.47,1.14,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-02-02,230606,3943,1.71,169,4.29,4621.34,20.04,1.17,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-02-09,252928,4603,1.82,180,3.92,4932.1,19.5,1.07,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-02-16,225049,3578,1.59,143,4.02,4462.72,19.83,1.25,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-02-23,235956,3728,1.58,136,3.67,4808.78,20.38,1.29,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-03-02,210249,3616,1.72,154,4.27,4032.58,19.18,1.12,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-03-09,222459,3537,1.59,143,4.07,4409.14,19.82,1.25,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-03-16,278492,5124,1.84,208,4.06,5399.96,19.39,1.05,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-03-23,257584,4378,1.7,162,3.71,4845.16,18.81,1.11,Sigma
+HC-DTC-005,HIV Prevention — DTC,DTC,HIV/AIDS,Programmatic + Social,2026-03-30,324751,5748,1.77,228,3.97,6202.74,19.1,1.08,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-01-12,222568,3605,1.62,85,2.38,2557.31,11.49,0.71,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-01-19,215340,3165,1.47,76,2.41,2353.67,10.93,0.74,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-01-26,192659,2851,1.48,62,2.18,2138.51,11.1,0.75,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-02-02,198716,2901,1.46,72,2.5,2317.03,11.66,0.8,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-02-09,210697,3413,1.62,73,2.16,2490.44,11.82,0.73,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-02-16,216219,3156,1.46,81,2.58,2447.6,11.32,0.78,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-02-23,240399,3894,1.62,100,2.59,2841.52,11.82,0.73,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-03-02,256624,4259,1.66,104,2.46,2925.51,11.4,0.69,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-03-09,239139,3993,1.67,97,2.44,2793.14,11.68,0.7,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-03-16,227318,3477,1.53,77,2.24,2541.42,11.18,0.73,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-03-23,226652,3513,1.55,86,2.45,2533.97,11.18,0.72,Sigma
+HC-DTC-006,Skin Cancer Awareness — DTC,DTC,Skin Cancer,Social + Display,2026-03-30,250275,3829,1.53,90,2.37,2885.67,11.53,0.75,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-01-12,204224,3471,1.7,142,4.1,4270.32,20.91,1.23,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-01-19,221235,3893,1.76,160,4.12,4418.06,19.97,1.13,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-01-26,260363,4608,1.77,188,4.1,5418.15,20.81,1.18,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-02-02,254521,4555,1.79,189,4.16,5072.6,19.93,1.11,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-02-09,242401,3999,1.65,168,4.22,4717.12,19.46,1.18,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-02-16,272296,5228,1.92,207,3.96,5598.41,20.56,1.07,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-02-23,233798,4068,1.74,164,4.04,4863.0,20.8,1.2,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-03-02,293603,4903,1.67,191,3.9,5692.96,19.39,1.16,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-03-09,260168,4943,1.9,187,3.79,5075.88,19.51,1.03,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-03-16,265963,4867,1.83,174,3.59,5172.98,19.45,1.06,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-03-23,249618,4692,1.88,190,4.07,4852.57,19.44,1.03,Sigma
+HC-HCP-007,Cardiology Insights — HCP,HCP,Heart Disease,Endemic + Email,2026-03-30,284970,5015,1.76,190,3.8,5964.42,20.93,1.19,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-01-12,366896,7558,2.06,253,3.35,5331.0,14.53,0.71,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-01-19,368871,7451,2.02,235,3.16,5536.75,15.01,0.74,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-01-26,424185,9374,2.21,316,3.38,6434.89,15.17,0.69,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-02-02,376269,7864,2.09,231,2.95,5625.22,14.95,0.72,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-02-09,439525,9933,2.26,323,3.26,6434.65,14.64,0.65,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-02-16,439428,9843,2.24,301,3.06,6674.91,15.19,0.68,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-02-23,356410,7128,2.0,220,3.09,5574.25,15.64,0.78,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-03-02,433155,9442,2.18,329,3.49,6752.89,15.59,0.72,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-03-09,390793,7698,1.97,239,3.11,5631.33,14.41,0.73,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-03-16,450923,9063,2.01,278,3.07,6624.06,14.69,0.73,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-03-23,428492,8312,1.94,256,3.08,6328.83,14.77,0.76,Sigma
+HC-DTC-008,COPD Living Well — DTC,DTC,COPD,Programmatic Display,2026-03-30,449712,8904,1.98,262,2.95,6997.52,15.56,0.79,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-01-12,262114,4613,1.76,136,2.96,4104.71,15.66,0.89,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-01-19,279992,5011,1.79,166,3.33,4387.47,15.67,0.88,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-01-26,280781,5615,2.0,182,3.25,4413.88,15.72,0.79,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-02-02,215926,4340,2.01,151,3.48,3595.17,16.65,0.83,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-02-09,278425,5512,1.98,196,3.56,4568.95,16.41,0.83,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-02-16,252940,4527,1.79,161,3.57,4052.1,16.02,0.9,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-02-23,273464,5277,1.93,167,3.18,4167.59,15.24,0.79,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-03-02,287761,5697,1.98,187,3.29,4722.16,16.41,0.83,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-03-09,291590,5860,2.01,188,3.21,4455.5,15.28,0.76,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-03-16,279114,5386,1.93,183,3.41,4298.36,15.4,0.8,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-03-23,230215,4258,1.85,141,3.33,3609.77,15.68,0.85,Sigma
+HC-HCP-009,Rheumatology Update — HCP,HCP,Arthritis,Endemic Display,2026-03-30,332173,6145,1.85,201,3.28,5417.74,16.31,0.88,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-01-12,430035,7654,1.78,281,3.68,9976.81,23.2,1.3,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-01-19,395388,6879,1.74,273,3.97,8971.35,22.69,1.3,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-01-26,347116,5831,1.68,209,3.6,7792.75,22.45,1.34,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-02-02,375097,6526,1.74,272,4.18,8713.5,23.23,1.34,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-02-09,385055,6545,1.7,229,3.51,8671.44,22.52,1.32,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-02-16,375906,6277,1.67,224,3.58,8721.02,23.2,1.39,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-02-23,401247,7182,1.79,288,4.02,8915.71,22.22,1.24,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-03-02,490042,8134,1.66,338,4.16,11893.32,24.27,1.46,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-03-09,389398,7281,1.87,295,4.06,8784.82,22.56,1.21,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-03-16,420121,7478,1.78,296,3.96,9658.58,22.99,1.29,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-03-23,507333,8370,1.65,308,3.68,12069.45,23.79,1.44,Sigma
+HC-DTC-010,Migraine Relief — DTC,DTC,Migraine,Social + Native,2026-03-30,537685,9624,1.79,343,3.57,12458.16,23.17,1.29,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-01-12,290658,4708,1.62,88,1.88,5929.42,20.4,1.26,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-01-19,276366,4228,1.53,84,1.99,5701.43,20.63,1.35,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-01-26,306651,4906,1.6,102,2.08,6286.35,20.5,1.28,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-02-02,297019,4455,1.5,98,2.22,6100.77,20.54,1.37,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-02-09,304795,4571,1.5,101,2.23,5888.64,19.32,1.29,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-02-16,296599,4537,1.53,99,2.2,5780.71,19.49,1.27,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-02-23,297853,4825,1.62,90,1.87,5760.48,19.34,1.19,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-03-02,398637,6497,1.63,135,2.08,8439.15,21.17,1.3,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-03-09,352311,5390,1.53,115,2.14,7391.48,20.98,1.37,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-03-16,370022,5661,1.53,123,2.19,7296.83,19.72,1.29,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-03-23,421616,6155,1.46,132,2.15,8592.53,20.38,1.4,Sigma
+HC-DTC-011,Asthma Management — DTC,DTC,Asthma,Programmatic + Social,2026-03-30,413891,5960,1.44,122,2.05,8774.49,21.2,1.47,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-01-12,247922,4512,1.82,83,1.86,3760.98,15.17,0.83,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-01-19,306132,5387,1.76,105,1.96,4490.96,14.67,0.83,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-01-26,284534,5121,1.8,104,2.05,4381.82,15.4,0.86,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-02-02,317615,5717,1.8,102,1.8,4468.84,14.07,0.78,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-02-09,329271,5861,1.78,104,1.79,4988.46,15.15,0.85,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-02-16,277088,4433,1.6,90,2.05,4145.24,14.96,0.94,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-02-23,315325,5644,1.79,106,1.88,4786.63,15.18,0.85,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-03-02,319331,5364,1.68,99,1.85,4815.51,15.08,0.9,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-03-09,315018,5638,1.79,105,1.88,4655.97,14.78,0.83,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-03-16,394985,6240,1.58,130,2.09,5885.28,14.9,0.94,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-03-23,305421,5405,1.77,106,1.97,4508.01,14.76,0.83,Sigma
+HC-HCP-012,Dermatology CME — HCP,HCP,Skin Conditions,Endemic + Email,2026-03-30,435534,6924,1.59,128,1.85,6245.56,14.34,0.9,Sigma

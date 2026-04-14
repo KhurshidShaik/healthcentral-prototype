@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HealthCentral Campaign Intelligence</title>
+
+  <!-- React 18 -->
+  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
+
+  <!-- PropTypes — required by Recharts UMD -->
+  <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+
+  <!-- Recharts -->
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Babel (JSX in-browser transpile) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script>
+    // Surface JS errors visibly instead of blank screen
+    window.onerror = function(msg, src, line, col, err) {
+      document.getElementById('root').innerHTML =
+        '<div style="color:#fb7185;background:#0b1120;padding:32px;font-family:monospace;font-size:13px">' +
+        '<b>JS Error:</b> ' + msg + '<br><br>' + (src || '') + ':' + line +
+        (err ? '<br><br>' + err.stack : '') + '</div>';
+    };
+  </script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { 900: '#0b1120', 800: '#111827', 700: '#1a2235', 600: '#1e2d40' },
+            teal: { 400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488' },
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0b1120; font-family: 'Inter', system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #111827; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+    .chat-messages { overflow-y: auto; scroll-behavior: smooth; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .dot-bounce span {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: #2dd4bf;
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: bounce 1.2s infinite;
+    }
+    .dot-bounce span:nth-child(2) { animation-delay: 0.2s; }
+    .dot-bounce span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+    .chat-panel { transition: width 0.3s ease, opacity 0.3s ease; }
+    .pill-tab { transition: all 0.15s ease; }
+    .kpi-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(45,212,191,0.12); }
+
+    .suggestion-chip { cursor: pointer; transition: all 0.15s ease; }
+    .suggestion-chip:hover { background: #1e3a4a; border-color: #2dd4bf; color: #2dd4bf; }
+
+    .table-row { transition: background 0.1s; }
+    .table-row:hover { background: rgba(45,212,191,0.12) !important; }
+
+    .filter-select {
+      background: #1a2235;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-select:focus { border-color: #2dd4bf; }
+
+    input[type="text"]::placeholder { color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+    const {
+      AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+      XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, ZAxis
+    } = Recharts;
+
+    // ── Palette ──────────────────────────────────────────────────────────────
+    const C = {
+      teal: '#2dd4bf', blue: '#38bdf8', purple: '#a78bfa',
+      green: '#4ade80', amber: '#fbbf24', rose: '#fb7185',
+      text: '#f1f5f9', muted: '#94a3b8', border: '#1e293b',
+      card: '#111827', cardHover: '#1a2235',
+    };
+
+    const PIE_COLORS = ['#2dd4bf','#38bdf8','#a78bfa','#fbbf24','#fb7185','#4ade80','#f97316'];
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    const fmt = {
+      num: (n) => n == null ? '—' : n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : String(n),
+      pct: (n) => n == null ? '—' : `${Number(n).toFixed(2)}%`,
+      usd: (n) => n == null ? '—' : n >= 1e3 ? `$${(n/1e3).toFixed(1)}K` : `$${Number(n).toFixed(0)}`,
+      x:   (n) => n == null ? '—' : `${Number(n).toFixed(2)}x`,
+      score: (n) => n == null ? '—' : `${Number(n).toFixed(0)}/100`,
+    };
+
+    function delta(val, benchmark, higherIsBetter = true) {
+      if (val == null) return null;
+      const diff = higherIsBetter ? val - benchmark : benchmark - val;
+      return { positive: diff >= 0, label: `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}` };
+    }
+
+    // ── Reusable Components ───────────────────────────────────────────────────
+
+    function KPICard({ icon, label, value, sub, deltaVal, color }) {
+      return (
+        <div className="kpi-card rounded-xl p-4 flex flex-col gap-2 border border-slate-800" style={{background: C.card}}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold tracking-widest uppercase" style={{color: C.muted}}>{label}</span>
+            <span className="text-lg">{icon}</span>
+          </div>
+          <div className="text-2xl font-bold" style={{color: color || C.teal}}>{value}</div>
+          {sub && <div className="text-xs" style={{color: C.muted}}>{sub}</div>}
+          {deltaVal !== undefined && deltaVal !== null && (
+            <div className={`text-xs font-semibold ${deltaVal.positive ? 'text-green-400' : 'text-rose-400'}`}>
+              {deltaVal.positive ? '▲' : '▼'} {deltaVal.label} vs benchmark
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function SectionHeader({ title, sub, source }) {
+      return (
+        <div className="flex items-end gap-3 mb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
+            {sub && <p className="text-xs mt-0.5" style={{color: C.muted}}>{sub}</p>}
+          </div>
+          {source && (
+            <span className="text-xs px-2 py-0.5 rounded-full border border-slate-700 text-slate-500 ml-auto">{source}</span>
+          )}
+        </div>
+      );
+    }
+
+    function CustomTooltip({ active, payload, label }) {
+      if (!active || !payload?.length) return null;
+      return (
+        <div className="rounded-lg p-3 border border-slate-600 shadow-xl text-xs" style={{background:'#253348', color:'#f1f5f9'}}>
+          <p className="font-semibold mb-1" style={{color:'#f1f5f9'}}>{label}</p>
+          {payload.map((p, i) => (
+            <p key={i} style={{color: p.color || '#94a3b8'}}>{p.name}: <span className="font-bold" style={{color:'#f1f5f9'}}>{typeof p.value === 'number' ? p.value.toLocaleString() : p.value}</span></p>
+          ))}
+        </div>
+      );
+    }
+
+    // ── Tab: Overview ─────────────────────────────────────────────────────────
+    function OverviewTab({ data }) {
+      if (!data) return <div className="text-slate-500 text-sm mt-10 text-center">Loading…</div>;
+      const { kpis, weekly_trend, channel_mix } = data;
+
+      const trendData = (weekly_trend || []).map(w => ({
+        week: w.week_start?.slice(5),
+        Impressions: Math.round(w.impressions / 1000),
+        CTR: w.ctr,
+        Conversions: w.conversions,
+        Engagement: w.engagement_score,
+        ROAS: w.roas,
+      }));
+
+      return (
+        <div className="flex flex-col gap-5">
+          {/* KPI row */}
+          <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
+            <KPICard icon="📡" label="Impressions" value={fmt.num(kpis.impressions)} sub="total served" color={C.teal} />
+            <KPICard icon="🖱️" label="CTR" value={fmt.pct(kpis.ctr)} sub="clicks / impressions" color={C.blue}
+              deltaVal={delta(kpis.ctr, 0.35)} />
+            <KPICard icon="🎯" label="Conversions" value={fmt.num(kpis.conversions)} sub="total actions" color={C.purple} />
+            <KPICard icon="💰" label="Total Spend" value={fmt.usd(kpis.spend)} sub="media spend" color={C.amber} />
+            <KPICard icon="📈" label="Avg ROAS" value={fmt.x(kpis.roas)} sub="return on ad spend" color={C.green}
+              deltaVal={delta(kpis.roas, 2.0)} />
+            <KPICard icon="✨" label="Engagement" value={fmt.score(kpis.engagement)} sub="Adobe composite" color={C.rose} />
+          </div>
+
+          {/* Trend + Channel */}
+          <div className="grid grid-cols-5 gap-4">
+            <div className="col-span-3 rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
+              <SectionHeader title="Weekly Performance Trend" sub="Impressions (K) and CTR over time" source="Sigma" />
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={trendData} margin={{top:5,right:10,left:-10,bottom:0}}>
+                  <defs>
+                    <linearGradient id="gImp" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.teal} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={C.teal} stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="gCTR" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.blue} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={C.blue} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis dataKey="week" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
+                  <YAxis yAxisId="left" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
+                  <YAxis yAxisId="right" orientation="right" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area yAxisId="left" type="monotone" dataKey="Impressions" stroke={C.teal} strokeWidth={2} fill="url(#gImp)" name="Impressions (K)" />
+                  <Area yAxisId="right" type="monotone" dataKey="CTR" stroke={C.blue} strokeWidth={2} fill="url(#gCTR)" name="CTR %" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="col-span-2 rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
+              <SectionHeader title="Channel Mix" sub="Spend distribution" source="Sigma" />
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={channel_mix || []} dataKey="spend_usd" nameKey="channel" cx="50%" cy="50%"
+                    innerRadius={55} outerRadius={85} paddingAngle={3}>
+                    {(channel_mix || []).map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v) => [`$${(v/1000).toFixed(1)}K`, 'Spend']} contentStyle={{background:'#253348',border:'1px solid #4b6280',borderRadius:'8px',color:'#f1f5f9',fontSize:'12px'}} />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{fontSize:'11px', color:'#94a3b8'}} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* ROAS + Engagement trend */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
+              <SectionHeader title="ROAS Trend" sub="Weekly return on ad spend" source="Sigma + derived" />
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={trendData} margin={{top:5,right:10,left:-10,bottom:0}}>
+                  <defs>
+                    <linearGradient id="gROAS" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.green} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={C.green} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis dataKey="week" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
+                  <YAxis tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="ROAS" stroke={C.green} strokeWidth={2} fill="url(#gROAS)" name="ROAS (x)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
+              <SectionHeader title="Engagement Score Trend" sub="Adobe Analytics composite (0–100)" source="Adobe" />
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={trendData} margin={{top:5,right:10,left:-10,bottom:0}}>
+                  <defs>
+                    <linearGradient id="gEng" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.rose} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={C.rose} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <XAxis dataKey="week" tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false}/>
+                  <YAxis tick={{fill:'#475569', fontSize:10}} axisLine={false} tickLine={false} domain={[0,100]}/>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="Engagement" stroke={C.rose} strokeWidth={2} fill="url(#gEng)" name="Engagement Score" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Tab: Campaigns ────────────────────────────────────────────────────────
+    function CampaignsTab({ data }) {
+      if (!data) return null;
+      const { campaigns } = data;
+      const [sort, setSort] = useState({ key: 'roas', dir: -1 });
+
+      const sorted = [...(campaigns || [])].sort((a, b) => sort.dir * ((b[sort.key] ?? 0) - (a[sort.key] ?? 0)));
+
+      const handleSort = (key) => {
+        setSort(s => ({ key, dir: s.key === key ? -s.dir : -1 }));
+      };
+
+      const cols = [
+        { key: 'campaign_name', label: 'Campaign', fmt: v => v, align: 'left' },
+        { key: 'campaign_type', label: 'Type', fmt: v => (
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${v === 'DTC' ? 'bg-teal-900/60 text-teal-300' : 'bg-blue-900/60 text-blue-300'}`}>{v}</span>
+        ), align: 'left' },
+        { key: 'roas', label: 'ROAS', fmt: v => fmt.x(v), align: 'right' },
+        { key: 'ctr', label: 'CTR', fmt: v => fmt.pct(v), align: 'right' },
+        { key: 'spend_usd', label: 'Spend', fmt: v => fmt.usd(v), align: 'right' },
+        { key: 'conversions', label: 'Conv.', fmt: v => fmt.num(v), align: 'right' },
+        { key: 'engagement_score', label: 'Engagement', fmt: v => (
+          <div className="flex items-center gap-2 justify-end">
+            <div className="w-16 bg-slate-700 rounded-full h-1.5">
+              <div className="h-1.5 rounded-full" style={{width:`${v}%`, background: v>70 ? C.green : v>50 ? C.amber : C.rose}} />
+            </div>
+            <span>{v?.toFixed(0)}</span>
+          </div>
+        ), align: 'right' },
+        { key: 'quality_score', label: 'Quality', fmt: v => (
+          <div className="flex items-center gap-2 justify-end">
+            <div className="w-16 bg-slate-700 rounded-full h-1.5">
+              <div className="h-1.5 rounded-full" style={{width:`${v}%`, background: v>80 ? C.green : v>65 ? C.amber : C.rose}} />
+            </div>
+            <span>{v?.toFixed(0)}</span>
+          </div>
+        ), align: 'right' },
+        { key: 'viewability_pct', label: 'Viewability', fmt: v => fmt.pct(v), align: 'right' },
+      ];
+
+      return (
+        <div className="flex flex-col gap-4">
+          {/* Scatter: engagement vs ROAS */}
+          <div className="rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
+            <SectionHeader title="Engagement vs ROAS by Campaign" sub="Bubble size = total spend. Top-right = best performers." source="Sigma + Adobe" />
+            <ResponsiveContainer width="100%" height={260}>
+              <ScatterChart margin={{top:10,right:20,left:-10,bottom:10}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis type="number" dataKey="engagement_score" name="Engagement" tick={{fill:'#475569',fontSize:10}} axisLine={false} tickLine={false} label={{value:'Engagement Score',position:'insideBottom',offset:-5,fill:'#475569',fontSize:11}}/>
+                <YAxis type="number" dataKey="roas" name="ROAS" tick={{fill:'#475569',fontSize:10}} axisLine={false} tickLine={false} label={{value:'ROAS',angle:-90,position:'insideLeft',fill:'#475569',fontSize:11}}/>
+                <ZAxis type="number" dataKey="spend_usd" range={[80,500]} name="Spend ($)" />
+                <Tooltip cursor={{fill:'rgba(45,212,191,0.05)'}} content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const d = payload[0].payload;
+                  return (
+                    <div className="rounded-lg p-3 border border-slate-600 text-xs shadow-xl" style={{background:'#253348',color:'#f1f5f9'}}>
+                      <p className="font-bold mb-1" style={{color:'#f1f5f9'}}>{d.campaign_name}</p>
+                      <p style={{color:C.teal}}>Engagement: <span className="font-bold">{d.engagement_score?.toFixed(0)}/100</span></p>
+                      <p style={{color:C.green}}>ROAS: <span className="font-bold">{d.roas?.toFixed(2)}x</span></p>
+                      <p style={{color:C.amber}}>Spend: <span className="font-bold">${(d.spend_usd/1000).toFixed(1)}K</span></p>
+                      <p style={{color:'#94a3b8'}}>{d.campaign_type} · {d.condition_category}</p>
+                    </div>
+                  );
+                }} />
+                <Legend wrapperStyle={{fontSize:'11px',color:'#94a3b8',paddingTop:'8px'}} />
+                <Scatter
+                  name="DTC"
+                  data={(campaigns || []).filter(c => c.campaign_type === 'DTC' && c.engagement_score != null && c.roas != null)}
+                  fill={C.teal}
+                  fillOpacity={0.8}
+                  stroke={C.teal}
+                  strokeWidth={1}
+                />
+                <Scatter
+                  name="HCP"
+                  data={(campaigns || []).filter(c => c.campaign_type === 'HCP' && c.engagement_score != null && c.roas != null)}
+                  fill={C.blue}
+                  fillOpacity={0.8}
+                  stroke={C.blue}
+                  strokeWidth={1}
+                />
+              </ScatterChart>
+            </ResponsiveContainer>
+            <div className="flex gap-4 mt-1">
+              <span className="flex items-center gap-1.5 text-xs text-slate-400"><span className="w-3 h-3 rounded-full" style={{background:C.teal}} /> DTC</span>
+              <span className="flex items-center gap-1.5 text-xs text-slate-400"><span className="w-3 h-3 rounded-full" style={{background:C.blue}} /> HCP</span>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="rounded-xl border border-slate-800 overflow-hidden" style={{background: C.card}}>
+            <div className="px-4 py-3 border-b border-slate-800">
+              <SectionHeader title="Campaign Detail Table" sub="All metrics unified from 3 sources — click headers to sort" source="Sigma + Adobe + DCM" />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-slate-800">
+                    {cols.map(c => (
+                      <th key={c.key}
+                        className="px-3 py-2.5 font-semibold text-slate-400 cursor-pointer hover:text-teal-400 select-none"
+                        style={{textAlign: c.align}}
+                        onClick={() => handleSort(c.key)}>
+                        {c.label} {sort.key === c.key ? (sort.dir === -1 ? '↓' : '↑') : ''}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map((row, i) => (
+                    <tr key={i} className="table-row border-b border-slate-800/50" style={{background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'}}>
+                      {cols.map(c => (
+                        <td key={c.key} className="px-3 py-2.5 text-slate-300" style={{textAlign: c.align}}>
+                          {c.fmt(row[c.key])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Tab: Channels ─────────────────────────────────────────────────────────
+    function ChannelsTab({ data }) {
+      if (!data) return null;
+      const { channel_mix } = data;
+      const sorted = [...(channel_mix || [])].sort((a, b) => b.spend_usd - a.spend_usd);
+
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
+              <SectionHeader title="Spend by Channel" sub="Total media investment" source="Sigma" />
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={sorted} layout="vertical" margin={{top:5,right:20,left:10,bottom:5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                  <XAxis type="number" tick={{fill:'#475569',fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`$${(v/1000).toFixed(0)}K`}/>
+                  <YAxis type="category" dataKey="channel" tick={{fill:'#94a3b8',fontSize:10}} axisLine={false} tickLine={false} width={130}/>
+                  <Tooltip formatter={(v)=>[`$${(v/1000).toFixed(1)}K`,'Spend']} contentStyle={{background:'#253348',border:'1px solid #4b6280',borderRadius:'8px',color:'#f1f5f9',fontSize:'12px'}}/>
+                  <Bar dataKey="spend_usd" radius={[0,4,4,0]}>
+                    {sorted.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
+              <SectionHeader title="ROAS by Channel" sub="Average return on ad spend" source="Sigma + derived" />
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={[...sorted].sort((a,b)=>b.roas-a.roas)} layout="vertical" margin={{top:5,right:20,left:10,bottom:5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false}/>
+                  <XAxis type="number" tick={{fill:'#475569',fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>`${v.toFixed(1)}x`}/>
+                  <YAxis type="category" dataKey="channel" tick={{fill:'#94a3b8',fontSize:10}} axisLine={false} tickLine={false} width={130}/>
+                  <Tooltip formatter={(v)=>[`${v.toFixed(2)}x`,'ROAS']} contentStyle={{background:'#253348',border:'1px solid #4b6280',borderRadius:'8px',color:'#f1f5f9',fontSize:'12px'}}/>
+                  <Bar dataKey="roas" radius={[0,4,4,0]}>
+                    {[...sorted].sort((a,b)=>b.roas-a.roas).map((d,i)=>(
+                      <Cell key={i} fill={d.roas>=2.5 ? C.green : d.roas>=1.5 ? C.amber : C.rose} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-800 overflow-hidden" style={{background: C.card}}>
+            <div className="px-4 py-3 border-b border-slate-800">
+              <p className="text-sm font-semibold text-slate-200">Channel Performance Summary</p>
+              <p className="text-xs text-slate-500 mt-0.5">Sigma + DCM</p>
+            </div>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-800">
+                  {['Channel','Campaigns','Impressions','Spend','ROAS','Conversions'].map(h=>(
+                    <th key={h} className="px-4 py-2.5 text-left font-semibold text-slate-400">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((ch, i) => (
+                  <tr key={i} className="table-row border-b border-slate-800/50">
+                    <td className="px-4 py-2.5 text-slate-200 font-medium">{ch.channel}</td>
+                    <td className="px-4 py-2.5 text-slate-400">{ch.campaigns ?? '—'}</td>
+                    <td className="px-4 py-2.5 text-slate-400">{fmt.num(ch.impressions)}</td>
+                    <td className="px-4 py-2.5 text-slate-300">{fmt.usd(ch.spend_usd)}</td>
+                    <td className="px-4 py-2.5">
+                      <span style={{color: ch.roas>=2.5 ? C.green : ch.roas>=1.5 ? C.amber : C.rose}}>
+                        {fmt.x(ch.roas)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-slate-400">{fmt.num(ch.conversions)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Tab: Quality ──────────────────────────────────────────────────────────
+    function QualityTab({ data }) {
+      if (!data) return null;
+      const { campaigns, kpis } = data;
+
+      const sorted = [...(campaigns || [])].sort((a,b) => b.quality_score - a.quality_score);
+
+      return (
+        <div className="flex flex-col gap-4">
+          {/* Quality KPIs */}
+          <div className="grid grid-cols-4 gap-3">
+            <KPICard icon="👁️" label="Avg Viewability" value={fmt.pct(kpis.viewability)} sub="IAB benchmark: 70%" color={C.blue}
+              deltaVal={delta(kpis.viewability, 70)} />
+            <KPICard icon="🛡️" label="Avg Quality Score" value={fmt.score(kpis.quality)} sub="Viewability + Safety + Fraud" color={C.teal} />
+            <KPICard icon="✅" label="Engagement Score" value={fmt.score(kpis.engagement)} sub="Adobe composite" color={C.green} />
+            <KPICard icon="⚠️" label="Fraud Benchmark" value="< 3%" sub="acceptable threshold" color={C.amber} />
+          </div>
+
+          {/* Quality bars */}
+          <div className="rounded-xl p-4 border border-slate-800" style={{background: C.card}}>
+            <SectionHeader title="Quality Score by Campaign" sub="DCM: Viewability (40%) + Brand Safety (40%) + Fraud rate (20%)" source="DCM" />
+            <div className="flex flex-col gap-3 mt-2">
+              {sorted.map((c, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-44 text-xs text-slate-400 truncate text-right flex-shrink-0">{c.campaign_name?.replace(' — HCP','').replace(' — DTC','')}</div>
+                  <div className="flex-1 bg-slate-800 rounded-full h-2">
+                    <div className="h-2 rounded-full transition-all duration-500"
+                      style={{
+                        width:`${c.quality_score}%`,
+                        background: c.quality_score>=80 ? C.green : c.quality_score>=65 ? C.amber : C.rose
+                      }} />
+                  </div>
+                  <div className="w-12 text-xs text-right" style={{color: c.quality_score>=80 ? C.green : c.quality_score>=65 ? C.amber : C.rose}}>
+                    {c.quality_score?.toFixed(0)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Viewability + Fraud table */}
+          <div className="rounded-xl border border-slate-800 overflow-hidden" style={{background: C.card}}>
+            <div className="px-4 py-3 border-b border-slate-800">
+              <p className="text-sm font-semibold text-slate-200">Delivery Quality Detail</p>
+              <p className="text-xs text-slate-500 mt-0.5">Source: DCM Ad Server</p>
+            </div>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-800">
+                  {['Campaign','Type','Viewability %','Bounce Rate %','Avg Frequency','Fraud Rate %','Brand Safety %'].map(h=>(
+                    <th key={h} className="px-4 py-2.5 text-left font-semibold text-slate-400">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((c, i) => (
+                  <tr key={i} className="table-row border-b border-slate-800/50">
+                    <td className="px-4 py-2.5 text-slate-300 font-medium max-w-xs truncate">{c.campaign_name}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${c.campaign_type==='DTC'?'bg-teal-900/60 text-teal-300':'bg-blue-900/60 text-blue-300'}`}>{c.campaign_type}</span>
+                    </td>
+                    <td className="px-4 py-2.5" style={{color: c.viewability_pct>=70 ? C.green : C.rose}}>{fmt.pct(c.viewability_pct)}</td>
+                    <td className="px-4 py-2.5" style={{color: c.bounce_rate_pct<=35 ? C.green : c.bounce_rate_pct<=50 ? C.amber : C.rose}}>{fmt.pct(c.bounce_rate_pct)}</td>
+                    <td className="px-4 py-2.5" style={{color: c.avg_frequency<=5 ? C.green : C.rose}}>{c.avg_frequency?.toFixed(1)}x</td>
+                    <td className="px-4 py-2.5" style={{color: c.fraud_rate_pct<=3 ? C.green : C.rose}}>{fmt.pct(c.fraud_rate_pct)}</td>
+                    <td className="px-4 py-2.5" style={{color: c.brand_safety_pct>=95 ? C.green : C.amber}}>{fmt.pct(c.brand_safety_pct)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Chat Panel ────────────────────────────────────────────────────────────
+    const STARTERS = [
+      "Give me a portfolio overview",
+      "Why is Cardiology Insights underperforming?",
+      "Show me only HCP campaigns",
+      "Explain how engagement score is calculated",
+      "Compare DTC vs HCP performance",
+      "Which channel has the best ROAS?",
+    ];
+
+    function ChatPanel({ open, onClose, filters, onFiltersChange }) {
+      const [messages, setMessages] = useState([]);
+      const [input, setInput] = useState('');
+      const [sending, setSending] = useState(false);
+      const bottomRef = useRef(null);
+      const inputRef = useRef(null);
+
+      useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages, sending]);
+
+      const send = async (text) => {
+        const msg = text || input.trim();
+        if (!msg || sending) return;
+        setInput('');
+        setSending(true);
+
+        const userMsg = { role: 'user', content: msg };
+        setMessages(prev => [...prev, userMsg]);
+
+        // Build history for API (exclude last user msg we just added)
+        const history = messages.map(m => ({ role: m.role, content: m.content }));
+
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, filters, history }),
+          });
+          const data = await res.json();
+
+          setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+
+          // Apply any dashboard actions
+          if (data.actions?.length) {
+            for (const action of data.actions) {
+              if (action.type === 'filter_update') {
+                onFiltersChange(action.filters);
+              }
+            }
+          }
+        } catch (err) {
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: 'Sorry, something went wrong. Please try again.',
+            error: true,
+          }]);
+        } finally {
+          setSending(false);
+          setTimeout(() => inputRef.current?.focus(), 100);
+        }
+      };
+
+      const handleKey = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+      };
+
+      return (
+        <div
+          className="chat-panel flex flex-col border-l border-slate-800 h-full"
+          style={{
+            width: open ? '360px' : '0px',
+            opacity: open ? 1 : 0,
+            overflow: 'hidden',
+            background: '#0d1526',
+            minWidth: open ? '360px' : '0px',
+          }}>
+          {open && (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 flex-shrink-0">
+                <div>
+                  <p className="text-sm font-semibold text-slate-200">AI Campaign Analyst</p>
+                  <p className="text-xs text-slate-500">GPT-4o · Sigma + Adobe + DCM context</p>
+                </div>
+                <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-lg leading-none p-1">✕</button>
+              </div>
+
+              {/* Messages */}
+              <div className="chat-messages flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+                {messages.length === 0 && (
+                  <div className="flex flex-col gap-3 mt-2">
+                    <p className="text-xs text-slate-500 text-center">Ask anything about your campaigns</p>
+                    <div className="flex flex-col gap-2">
+                      {STARTERS.map((s, i) => (
+                        <button key={i}
+                          className="suggestion-chip text-left text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-400"
+                          style={{background:'#111827'}}
+                          onClick={() => send(s)}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {messages.map((m, i) => (
+                  <div key={i} className={`fade-in flex flex-col gap-1 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div className={`text-xs font-semibold ${m.role === 'user' ? 'text-teal-400' : 'text-slate-400'}`}>
+                      {m.role === 'user' ? 'You' : '🤖 AI Analyst'}
+                    </div>
+                    <div
+                      className="text-xs leading-relaxed rounded-xl px-3 py-2.5 max-w-[90%]"
+                      style={{
+                        background: m.role === 'user' ? 'rgba(45,212,191,0.12)' : m.error ? 'rgba(251,113,133,0.1)' : '#1a2235',
+                        color: m.error ? C.rose : C.text,
+                        border: m.role === 'user' ? '1px solid rgba(45,212,191,0.25)' : '1px solid #1e293b',
+                        whiteSpace: 'pre-wrap',
+                      }}>
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+
+                {sending && (
+                  <div className="fade-in flex flex-col gap-1 items-start">
+                    <div className="text-xs font-semibold text-slate-400">🤖 AI Analyst</div>
+                    <div className="rounded-xl px-4 py-3" style={{background:'#1a2235', border:'1px solid #1e293b'}}>
+                      <div className="dot-bounce"><span/><span/><span/></div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={bottomRef} />
+              </div>
+
+              {/* Input */}
+              <div className="flex-shrink-0 border-t border-slate-800 p-3">
+                <div className="flex gap-2">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={handleKey}
+                    disabled={sending}
+                    placeholder="Ask about campaigns, metrics, strategy…"
+                    className="flex-1 bg-slate-800 text-slate-200 text-xs rounded-lg px-3 py-2.5 border border-slate-700 outline-none focus:border-teal-600 disabled:opacity-50"
+                    style={{fontFamily: 'inherit'}}
+                  />
+                  <button
+                    onClick={() => send()}
+                    disabled={!input.trim() || sending}
+                    className="px-3 py-2 rounded-lg text-sm font-bold disabled:opacity-30"
+                    style={{background: C.teal, color: '#0b1120'}}>
+                    ↑
+                  </button>
+                </div>
+                <p className="text-xs text-slate-600 mt-1.5 text-center">Modifying filters will update the dashboard</p>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // ── Filter Bar ────────────────────────────────────────────────────────────
+    function FilterBar({ filterOptions, filters, onChange }) {
+      if (!filterOptions) return null;
+      const sel = (key, opts) => (
+        <select className="filter-select" value={filters[key] || 'All'} onChange={e => onChange({...filters, [key]: e.target.value})}>
+          {opts.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+      );
+      return (
+        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-slate-800 flex-shrink-0" style={{background:'#0d1526'}}>
+          <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Filters</span>
+          {sel('campaign_type', filterOptions.campaign_types || [])}
+          {sel('condition', filterOptions.conditions || [])}
+          {sel('channel', filterOptions.channels || [])}
+          {(filters.campaign_type !== 'All' || filters.condition !== 'All' || filters.channel !== 'All') && (
+            <button className="text-xs text-rose-400 hover:text-rose-300 ml-1"
+              onClick={() => onChange({campaign_type:'All', condition:'All', channel:'All'})}>
+              Clear filters ✕
+            </button>
+          )}
+          <div className="ml-auto flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs text-slate-500">Live · Updated weekly grain</span>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Source Badges ─────────────────────────────────────────────────────────
+    function SourceBadges() {
+      const badges = [
+        { label: 'Sigma', color: '#1d4ed8', bg: 'rgba(29,78,216,0.15)' },
+        { label: 'Adobe', color: '#b45309', bg: 'rgba(180,83,9,0.15)' },
+        { label: 'DCM', color: '#6d28d9', bg: 'rgba(109,40,217,0.15)' },
+      ];
+      return (
+        <div className="flex gap-2">
+          {badges.map(b => (
+            <span key={b.label} className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{color:b.color, background:b.bg}}>
+              {b.label}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    // ── Root App ──────────────────────────────────────────────────────────────
+    function App() {
+      const [activeTab, setActiveTab] = useState('overview');
+      const [chatOpen, setChatOpen] = useState(false);
+      const [filters, setFilters] = useState({ campaign_type: 'All', condition: 'All', channel: 'All' });
+      const [data, setData] = useState(null);
+      const [filterOptions, setFilterOptions] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      // Load filter options once
+      useEffect(() => {
+        fetch('/api/filters').then(r => r.json()).then(setFilterOptions).catch(console.error);
+      }, []);
+
+      // Reload data on filter change
+      useEffect(() => {
+        setLoading(true);
+        const params = new URLSearchParams({
+          campaign_type: filters.campaign_type,
+          condition: filters.condition,
+          channel: filters.channel,
+        });
+        fetch(`/api/data?${params}`)
+          .then(r => r.json())
+          .then(d => { setData(d); setLoading(false); })
+          .catch(() => setLoading(false));
+      }, [filters]);
+
+      const tabs = [
+        { id: 'overview', label: 'Overview' },
+        { id: 'campaigns', label: 'Campaigns' },
+        { id: 'channels', label: 'Channels' },
+        { id: 'quality', label: 'Quality' },
+      ];
+
+      return (
+        <div className="flex flex-col" style={{height:'100vh', background:'#0b1120'}}>
+          {/* ─── Header ─── */}
+          <div className="flex-shrink-0 border-b border-slate-800 px-6 py-4" style={{background:'#0d1526'}}>
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-teal-400 text-xs font-bold uppercase tracking-widest">HealthCentral</span>
+                </div>
+                <h1 className="text-xl font-bold text-white">Campaign Performance Intelligence Hub</h1>
+                <p className="text-xs text-slate-400 mt-0.5">Multi-source analytics · Sigma Computing · Adobe Analytics · DCM Ad Server</p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <SourceBadges />
+                <button
+                  onClick={() => setChatOpen(o => !o)}
+                  className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all"
+                  style={{
+                    background: chatOpen ? 'rgba(45,212,191,0.15)' : '#1a2235',
+                    borderColor: chatOpen ? C.teal : '#334155',
+                    color: chatOpen ? C.teal : '#94a3b8',
+                  }}>
+                  🤖 {chatOpen ? 'Close AI Chat' : 'Open AI Chat'}
+                </button>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1 mt-4">
+              {tabs.map(t => (
+                <button key={t.id}
+                  className="pill-tab text-xs font-semibold px-4 py-1.5 rounded-full"
+                  style={{
+                    background: activeTab === t.id ? 'rgba(45,212,191,0.15)' : 'transparent',
+                    color: activeTab === t.id ? C.teal : '#64748b',
+                    border: activeTab === t.id ? `1px solid rgba(45,212,191,0.3)` : '1px solid transparent',
+                  }}
+                  onClick={() => setActiveTab(t.id)}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ─── Filter bar ─── */}
+          <FilterBar filterOptions={filterOptions} filters={filters} onChange={setFilters} />
+
+          {/* ─── Body: dashboard + chat ─── */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Dashboard */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {loading && (
+                <div className="flex items-center justify-center h-40">
+                  <div className="dot-bounce"><span/><span/><span/></div>
+                </div>
+              )}
+              {!loading && activeTab === 'overview'   && <OverviewTab data={data} />}
+              {!loading && activeTab === 'campaigns'  && <CampaignsTab data={data} />}
+              {!loading && activeTab === 'channels'   && <ChannelsTab data={data} />}
+              {!loading && activeTab === 'quality'    && <QualityTab data={data} />}
+            </div>
+
+            {/* Chat panel */}
+            <ChatPanel
+              open={chatOpen}
+              onClose={() => setChatOpen(false)}
+              filters={filters}
+              onFiltersChange={(newFilters) => setFilters(f => ({...f, ...newFilters}))}
+            />
+          </div>
+
+          {/* ─── Footer ─── */}
+          <div className="flex-shrink-0 border-t border-slate-800 px-6 py-2 flex items-center justify-between" style={{background:'#0d1526'}}>
+            <p className="text-xs text-slate-600">
+              Data pipeline: Sigma CSV → Adobe CSV → DCM CSV → Python ETL → Unified dataset → FastAPI → React
+            </p>
+            <p className="text-xs text-slate-600">Prototype by <span className="text-slate-400 font-medium">Khurshid Shaik</span> · BI Analyst Candidate, HealthCentral</p>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
