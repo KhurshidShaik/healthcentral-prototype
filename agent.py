@@ -6,7 +6,8 @@ import json
 import os
 import re
 import pandas as pd
-from openai import OpenAI
+from langfuse.openai import OpenAI
+from langfuse import observe, get_client
 from dotenv import load_dotenv
 
 from prompts import SYSTEM_PROMPT, build_context_message
@@ -203,6 +204,7 @@ def _route_tool(name: str, args: dict, df: pd.DataFrame, current_filters: dict) 
 
 # ─── Main Agent Entry Point ────────────────────────────────────────────────────
 
+@observe()
 def run_agent(user_message: str, current_filters: dict, history: list,
               df: pd.DataFrame, live_stats: dict) -> dict:
     """
@@ -244,6 +246,7 @@ def run_agent(user_message: str, current_filters: dict, history: list,
         # No tool call → final response
         if not msg.tool_calls:
             content, suggestions = _parse_suggestions(msg.content or "")
+            get_client().flush()
             return {
                 "message": content,
                 "actions": accumulated_actions,
@@ -273,6 +276,7 @@ def run_agent(user_message: str, current_filters: dict, history: list,
             })
 
     # Fallback if we hit max rounds
+    get_client().flush()
     return {
         "message": "I've processed your request. The dashboard has been updated.",
         "actions": accumulated_actions,
