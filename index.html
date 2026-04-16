@@ -629,7 +629,7 @@
       ],
     };
 
-    function ChatPanel({ open, onClose, filters, onFiltersChange, activeTab }) {
+    function ChatPanel({ open, onClose, filters, onFiltersChange, activeTab, sessionId }) {
       const [messages, setMessages] = useState([]);
       const [input, setInput] = useState('');
       const [sending, setSending] = useState(false);
@@ -662,7 +662,7 @@
           const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: msg, filters, history }),
+            body: JSON.stringify({ message: msg, filters, history, session_id: sessionId }),
           });
           const data = await res.json();
 
@@ -935,6 +935,15 @@
 
     // ── Root App ──────────────────────────────────────────────────────────────
     function App() {
+      const sessionId = React.useMemo(() => {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+          return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+      }, []);
       const [activeTab, setActiveTab] = useState('overview');
       const [chatOpen, setChatOpen] = useState(false);
       const [filters, setFilters] = useState({ campaign_type: 'All', condition: 'All', channel: 'All' });
@@ -1037,6 +1046,7 @@
               filters={filters}
               onFiltersChange={(newFilters) => setFilters(f => ({...f, ...newFilters}))}
               activeTab={activeTab}
+              sessionId={sessionId}
             />
           </div>
 

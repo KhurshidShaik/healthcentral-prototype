@@ -1,6 +1,18 @@
 """
 HealthCentral Campaign Intelligence Hub — FastAPI backend.
 Serves the React UI and all data/agent API endpoints.
+
+Langfuse trace structure for each /api/chat request:
+
+  chat-request (span, root)               ← wraps the full HTTP request lifecycle
+  ├── data-preparation (span)             ← apply filters, compute live KPIs from DataFrame
+  └── agent-run (agent)  [from agent.py]  ← AI reasoning loop
+        ├── openai-call · round 1 (generation)
+        ├── tool:<name> · round 1 (tool)
+        └── openai-call · round 2 (generation)
+
+The root "chat-request" span groups "data-preparation" and "agent-run" into one trace
+so you can see total latency (data prep + AI) in a single view.
 """
 import os
 from pathlib import Path
@@ -9,15 +21,23 @@ import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from agent import run_agent
+from langfuse import get_client, propagate_attributes
+from agent import run_agent, score_trace
 from etl_pipeline import run_pipeline
 
 load_dotenv()
 
+if os.getenv("LANGFUSE_BASE_URL") and not os.getenv("LANGFUSE_HOST"):
+    os.environ["LANGFUSE_HOST"] = os.getenv("LANGFUSE_BASE_URL")
+
+# get_client() returns the same singleton as in agent.py — they share one Langfuse connection.
+# Observations created here (chat-request, data-preparation) and in agent.py (agent-run,
+# openai-call, tool) automatically nest under the same trace because they share
+# the same active context propagated via propagate_attributes().
+langfuse_main = get_client()
 app = FastAPI(title="HealthCentral Campaign Intelligence API")
 
 # ─── Load data once at startup ────────────────────────────────────────────────
@@ -245,52 +265,121 @@ class ChatRequest(BaseModel):
     message: str
     filters: dict = {}
     history: list = []
+    session_id: str | None = None
+    user_id: str | None = None
 
 
 @app.post("/api/chat")
 def chat(req: ChatRequest):
-    # Build live stats snapshot to inject into context
     filters = req.filters or {}
     from tools import _apply_filters
-    filtered = _apply_filters(DF, filters)
 
-    if filtered.empty:
-        live_stats = {}
-    else:
-        total_imp = int(filtered["impressions"].sum())
-        total_clk = int(filtered["clicks"].sum())
-        live_stats = {
-            "n_campaigns": int(filtered["campaign_id"].nunique()),
-            "impressions": total_imp,
-            "clicks": total_clk,
-            "ctr": round(float(total_clk / total_imp * 100), 2) if total_imp > 0 else 0,
-            "conversions": int(filtered["conversions"].sum()),
-            "spend": round(float(filtered["spend_usd"].sum()), 2),
-            "roas": round(float(filtered["roas"].mean()), 2),
-            "engagement": round(float(filtered["engagement_score"].mean()), 1),
-            "quality": round(float(filtered["quality_score"].mean()), 1),
-        }
+    # propagate_attributes() stamps session_id and user_id onto every Langfuse
+    # observation created within this block — including those inside run_agent().
+    # This is what groups multiple chat turns into a "session" in Langfuse's Sessions view.
+    attr_kwargs: dict = {}
+    if req.session_id:
+        attr_kwargs["session_id"] = req.session_id
+    if req.user_id:
+        attr_kwargs["user_id"] = req.user_id
 
-    try:
-        result = run_agent(
-            user_message=req.message,
-            current_filters=filters,
-            history=req.history,
-            df=DF,
-            live_stats=live_stats,
-        )
-        return _clean_json(result)
-    except Exception as e:
-        err = str(e)
-        if "insufficient_quota" in err or "429" in err:
-            msg = "OpenAI quota exceeded — please add credits at platform.openai.com/settings/billing and restart the server."
-        elif "401" in err or "invalid_api_key" in err:
-            msg = "Invalid OpenAI API key. Check your .env file."
-        elif "APIConnectionError" in type(e).__name__:
-            msg = "Could not reach OpenAI API — check your internet connection."
-        else:
-            msg = f"Agent error: {err}"
-        return {"message": msg, "actions": [], "error": True}
+    with propagate_attributes(**attr_kwargs):
+
+        # "chat-request" is the root span for the entire HTTP request.
+        # Everything below (data-preparation + agent-run) appears nested inside it.
+        # This lets you see total end-to-end latency per chat turn in Langfuse.
+        # input= logs the raw user message and filter state at the time of the request.
+        with langfuse_main.start_as_current_observation(
+            as_type="span",
+            name="chat-request",
+            input={"message": req.message, "filters": filters},
+        ) as root_span:
+
+            # "data-preparation" is a child span that covers the DataFrame filtering
+            # and live-stats computation that happens BEFORE the AI model is called.
+            # Logging it separately lets you see how much time is spent on data vs AI.
+            # input= shows which filters were applied; output= shows the KPIs computed.
+            with langfuse_main.start_as_current_observation(
+                as_type="span",
+                name="data-preparation",
+                input={"filters": filters},
+            ) as prep_span:
+                filtered = _apply_filters(DF, filters)
+                if filtered.empty:
+                    live_stats = {}
+                else:
+                    total_imp = int(filtered["impressions"].sum())
+                    total_clk = int(filtered["clicks"].sum())
+                    live_stats = {
+                        "n_campaigns": int(filtered["campaign_id"].nunique()),
+                        "impressions": total_imp,
+                        "clicks": total_clk,
+                        "ctr": round(float(total_clk / total_imp * 100), 2) if total_imp > 0 else 0,
+                        "conversions": int(filtered["conversions"].sum()),
+                        "spend": round(float(filtered["spend_usd"].sum()), 2),
+                        "roas": round(float(filtered["roas"].mean()), 2),
+                        "engagement": round(float(filtered["engagement_score"].mean()), 1),
+                        "quality": round(float(filtered["quality_score"].mean()), 1),
+                    }
+                # output= logs the computed live stats — visible in Langfuse trace detail.
+                # This confirms the agent received correct context before calling OpenAI.
+                prep_span.update(output=live_stats)
+
+            try:
+                # run_agent() opens its own "agent-run" observation inside this context,
+                # so it automatically becomes a child of "chat-request" in the trace tree.
+                result = run_agent(
+                    user_message=req.message,
+                    current_filters=filters,
+                    history=req.history,
+                    df=DF,
+                    live_stats=live_stats,
+                    session_id=req.session_id,
+                    user_id=req.user_id,
+                )
+                # Update root span output with the agent's final answer so the top-level
+                # trace shows the response without needing to expand child observations.
+                root_span.update(output=result.get("message", ""))
+                langfuse_main.flush()
+                return _clean_json(result)
+
+            except Exception as e:
+                err = str(e)
+                if "insufficient_quota" in err or "429" in err:
+                    msg = "OpenAI quota exceeded — please add credits at platform.openai.com/settings/billing and restart the server."
+                elif "401" in err or "invalid_api_key" in err:
+                    msg = "Invalid OpenAI API key. Check your .env file."
+                elif "APIConnectionError" in type(e).__name__:
+                    msg = "Could not reach OpenAI API — check your internet connection."
+                else:
+                    msg = f"Agent error: {err}"
+                # level="ERROR" marks the root span red in Langfuse so failed requests
+                # are immediately visible when scanning the traces list.
+                root_span.update(output=msg, level="ERROR")
+                langfuse_main.flush()
+                return {"message": msg, "actions": [], "error": True}
+
+
+# ─── User Feedback endpoint ───────────────────────────────────────────────────
+
+class FeedbackRequest(BaseModel):
+    trace_id: str
+    value: int
+    comment: str = ""
+
+
+@app.post("/api/feedback")
+def submit_feedback(req: FeedbackRequest):
+    """
+    Record thumbs-up (1) or thumbs-down (0) feedback for a chat response.
+    The trace_id is returned in every /api/chat response.
+    """
+    if req.value not in (0, 1):
+        raise HTTPException(status_code=400, detail="value must be 0 or 1")
+    ok = score_trace(trace_id=req.trace_id, value=req.value, comment=req.comment)
+    if not ok:
+        raise HTTPException(status_code=500, detail="Failed to record feedback")
+    return {"status": "ok"}
 
 
 # ─── Helper ───────────────────────────────────────────────────────────────────
